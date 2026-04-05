@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人收支管理系统 - 删除功能修复版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+        }
+        
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --income: #2ecc71;
+            --expense: #e74c3c;
+            --warning: #f39c12;
+            --cloud: #9b59b6;
+            --category3: #e67e22;
+            --category4: #34495e;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --border: #ecf0f1;
+            --shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+            --radius: 6px;
+            --transition: all 0.2s ease;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 12px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background: white;
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-icon {
+            font-size: 18px;
+            color: var(--primary);
+        }
+        
+        .nav-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .nav-subtitle {
+            font-size: 10px;
+            color: #7f8c8d;
+            margin-top: 1px;
+        }
+        
+        /* 主网格布局 - 调整为左栏1/3，右栏2/3 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+        }
+        
+        .card-header {
+            padding: 10px 12px;
+        }
+        
+        .card-header.primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        
+        .card-header.cloud {
+            background: linear-gradient(135deg, var(--cloud), #8e44ad);
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .card-body {
+            padding: 12px;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 11px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 12px;
+            transition: var(--transition);
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+        }
+        
+        /* 调整表单行布局，适应较窄的宽度 */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        /* 分类选择器 - 澳门上家和下家在同一行 */
+        .category-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .category-group {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .category-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 3px;
+            display: block;
+        }
+        
+        .category-btn {
+            flex: 1;
+            padding: 6px 4px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            background: white;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        
+        .category-btn.macau-up {
+            color: var(--category3);
+            border-color: var(--category3);
+        }
+        
+        .category-btn.macau-up.active {
+            background: var(--category3);
+            color: white;
+        }
+        
+        .category-btn.macau-down {
+            color: var(--category4);
+            border-color: var(--category4);
+        }
+        
+        .category-btn.macau-down.active {
+            background: var(--category4);
+            color: white;
+        }
+        
+        .category-btn.guangdong-up {
+            color: var(--category3);
+            border-color: var(--category3);
+        }
+        
+        .category-btn.guangdong-up.active {
+            background: var(--category3);
+            color: white;
+        }
+        
+        .category-btn.guangdong-down {
+            color: var(--category4);
+            border-color: var(--category4);
+        }
+        
+        .category-btn.guangdong-down.active {
+            background: var(--category4);
+            color: white;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-success {
+            background: var(--income);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-danger {
+            background: var(--expense);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-cloud {
+            background: var(--cloud);
+            color: white;
+        }
+        
+        .btn-cloud:hover {
+            background: #8e44ad;
+        }
+        
+        .btn-sm {
+            padding: 4px 6px;
+            font-size: 10px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        .data-table thead {
+            background: #f8f9fa;
+        }
+        
+        .data-table th {
+            padding: 6px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+        }
+        
+        .data-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+        }
+        
+        .data-table tbody tr:hover {
+            background: rgba(52, 152, 219, 0.05);
+        }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 2px 4px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 500;
+        }
+        
+        .type-income {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--income);
+        }
+        
+        .type-expense {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--expense);
+        }
+        
+        /* 筛选器 */
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .filter-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .filter-select {
+            padding: 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 10px;
+            background: white;
+        }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .stat-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .stat-amount {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        
+        .stat-income {
+            color: var(--income);
+        }
+        
+        .stat-expense {
+            color: var(--expense);
+        }
+        
+        .stat-profit {
+            color: var(--primary);
+        }
+        
+        .stat-details {
+            font-size: 9px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+        
+        /* 操作按钮 */
+        .action-btn {
+            padding: 2px 4px;
+            border: none;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .action-delete {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--expense);
+        }
+        
+        .action-delete:hover {
+            background: var(--expense);
+            color: white;
+        }
+        
+        /* 分类统计标签 */
+        .category-badge {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 500;
+        }
+        
+        .category-badge.macau-up {
+            background: rgba(230, 126, 34, 0.1);
+            color: var(--category3);
+        }
+        
+        .category-badge.macau-down {
+            background: rgba(52, 73, 94, 0.1);
+            color: var(--category4);
+        }
+        
+        .category-badge.guangdong-up {
+            background: rgba(230, 126, 34, 0.1);
+            color: var(--category3);
+        }
+        
+        .category-badge.guangdong-down {
+            background: rgba(52, 73, 94, 0.1);
+            color: var(--category4);
+        }
+        
+        .category-badge.my-income {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--income);
+            border: 1px dashed var(--income);
+        }
+        
+        .category-badge.my-expense {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--expense);
+            border: 1px dashed var(--expense);
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 16px;
+            color: #999;
+            font-size: 11px;
+        }
+        
+        /* 我的收支特别标记 */
+        .my-income-row {
+            background: rgba(46, 204, 113, 0.05) !important;
+            border-left: 3px solid var(--income);
+        }
+        
+        .my-expense-row {
+            background: rgba(231, 76, 60, 0.05) !important;
+            border-left: 3px solid var(--expense);
+        }
+        
+        /* 收入支出提示样式 */
+        .income-hint {
+            color: var(--income);
+            font-weight: 600;
+            font-size: 10px;
+        }
+        
+        .expense-hint {
+            color: var(--expense);
+            font-weight: 600;
+            font-size: 10px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                max-width: 100%;
+                padding: 0 6px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                gap: 6px;
+                align-items: stretch;
+            }
+            
+            .btn-group {
+                justify-content: center;
+            }
+            
+            .category-group {
+                flex-direction: column;
+            }
+        }
+        
+        /* 小屏幕设备适配 */
+        @media (max-width: 480px) {
+            .stat-card {
+                padding: 6px;
+            }
+            
+            .stat-title {
+                font-size: 10px;
+            }
+            
+            .stat-amount {
+                font-size: 12px;
+            }
+            
+            .category-btn {
+                font-size: 9px;
+                padding: 5px 3px;
+            }
+            
+            .btn {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-left">
+                <div class="nav-icon">💰</div>
+                <div>
+                    <div class="nav-title">个人收支管理系统 - 删除功能修复版</div>
+                    <div class="nav-subtitle">澳门 & 粤港 - 下家总和减去上家总和=我的收支</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline btn-sm" onclick="exportData()">导出数据</button>
+                <button class="btn btn-outline btn-sm" onclick="importData()">导入数据</button>
+                <button class="btn btn-warning btn-sm" onclick="clearCurrentMonth()">清除当月</button>
+                <button class="btn btn-danger btn-sm" onclick="clearAllData()">清空数据</button>
+            </div>
+        </nav>
+        
+        <!-- 主内容区域 -->
+        <div class="main-grid">
+            <!-- 左栏：录入和管理 (现在占1/3) -->
+            <div>
+                <!-- 录入卡片 -->
+                <div class="card">
+                    <div class="card-header primary">
+                        <div class="card-title">📝 录入收支记录</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- 分类选择 - 澳门上家和下家在同一行 -->
+                        <div class="category-selector">
+                            <div>
+                                <div class="category-label">澳门分类：</div>
+                                <div class="category-group">
+                                    <button class="category-btn macau-up active" onclick="selectCategory('macau', 'up')">
+                                        <span>⬆️ 澳门上家</span>
+                                    </button>
+                                    <button class="category-btn macau-down" onclick="selectCategory('macau', 'down')">
+                                        <span>⬇️ 澳门下家</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="category-label">粤港分类：</div>
+                                <div class="category-group">
+                                    <button class="category-btn guangdong-up" onclick="selectCategory('guangdong', 'up')">
+                                        <span>⬆️ 粤港上家</span>
+                                    </button>
+                                    <button class="category-btn guangdong-down" onclick="selectCategory('guangdong', 'down')">
+                                        <span>⬇️ 粤港下家</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">姓名</label>
+                                <input type="text" id="person-name" placeholder="输入姓名" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">日期</label>
+                                <input type="date" id="record-date" class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">金额</label>
+                                <input type="number" id="record-amount" placeholder="输入金额" class="form-input" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">类型</label>
+                                <select id="record-type" class="form-input">
+                                    <option value="income">收入</option>
+                                    <option value="expense">支出</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">备注说明</label>
+                            <input type="text" id="record-note" placeholder="简要说明（可选）" class="form-input">
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="saveRecord()">保存记录</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 当天收支记录表格 -->
+                <div class="card">
+                    <div class="card-header primary">
+                        <div class="card-title">📊 当天收支记录</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>姓名/类型</th>
+                                        <th>分类</th>
+                                        <th>类型</th>
+                                        <th>金额</th>
+                                        <th>备注</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="today-records-body">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">暂无当天记录</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 当天我的收支统计 -->
+                <div class="card">
+                    <div class="card-header primary">
+                        <div class="card-title">💰 当天我的收支统计</div>
+                    </div>
+                    <div class="card-body">
+                        <div id="my-income-stats" class="stats-grid">
+                            <!-- 我的收支统计卡片会动态显示在这里 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右栏：查看和统计 (现在占2/3) -->
+            <div>
+                <!-- 查看记录 -->
+                <div class="card">
+                    <div class="card-header primary">
+                        <div class="card-title">📈 查看详细记录</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- 筛选器 -->
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label class="filter-label">查看模式：</label>
+                                <select id="view-mode" class="filter-select" onchange="loadRecords()">
+                                    <option value="all">全部记录</option>
+                                    <option value="today">当天记录</option>
+                                    <option value="month">本月记录</option>
+                                    <option value="year">本年记录</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label class="filter-label">筛选分类：</label>
+                                <select id="filter-category" class="filter-select" onchange="loadRecords()">
+                                    <option value="all">全部分类</option>
+                                    <option value="macau-up">澳门上家</option>
+                                    <option value="macau-down">澳门下家</option>
+                                    <option value="guangdong-up">粤港上家</option>
+                                    <option value="guangdong-down">粤港下家</option>
+                                    <option value="my-income">我的收支</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label class="filter-label">筛选姓名：</label>
+                                <select id="filter-person" class="filter-select" onchange="loadRecords()">
+                                    <option value="all">全部人员</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- 表格 -->
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>姓名/类型</th>
+                                        <th>分类</th>
+                                        <th>类型</th>
+                                        <th>金额</th>
+                                        <th>备注</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="records-body">
+                                    <tr>
+                                        <td colspan="7" class="empty-state">暂无记录</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 统计卡片 -->
+                        <div id="summary-stats" class="stats-grid">
+                            <!-- 统计卡片会动态显示在这里 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态
+        let appState = {
+            records: [],
+            selectedCategory: 'macau',
+            selectedSubtype: 'up',
+            selectedPerson: null
+        };
+        
+        // DOM元素引用
+        const elements = {
+            personName: document.getElementById('person-name'),
+            recordDate: document.getElementById('record-date'),
+            recordType: document.getElementById('record-type'),
+            recordAmount: document.getElementById('record-amount'),
+            recordNote: document.getElementById('record-note'),
+            todayRecordsBody: document.getElementById('today-records-body'),
+            recordsBody: document.getElementById('records-body'),
+            summaryStats: document.getElementById('summary-stats'),
+            myIncomeStats: document.getElementById('my-income-stats'),
+            viewMode: document.getElementById('view-mode'),
+            filterCategory: document.getElementById('filter-category'),
+            filterPerson: document.getElementById('filter-person')
+        };
+        
+        // 工具函数
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 12px;
+                right: 12px;
+                background: ${isError ? '#e74c3c' : '#2ecc71'};
+                color: white;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-weight: 500;
+                font-size: 11px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: all 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+        
+        // 初始化应用
+        function init() {
+            const today = new Date().toISOString().split('T')[0];
+            elements.recordDate.value = today;
+            
+            // 初始化事件监听
+            setupEventListeners();
+            
+            loadLocalData();
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 使用事件委托处理删除按钮点击
+            document.addEventListener('click', function(event) {
+                // 检查点击的元素是否是删除按钮
+                if (event.target.classList.contains('action-delete')) {
+                    const button = event.target;
+                    const recordId = button.getAttribute('data-id');
+                    
+                    if (recordId) {
+                        deleteRecord(recordId);
+                    } else {
+                        // 如果找不到data-id，尝试从最近的tr元素获取
+                        const row = button.closest('tr');
+                        if (row) {
+                            const rowId = row.getAttribute('data-id');
+                            if (rowId) {
+                                deleteRecord(rowId);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 阻止表单默认提交行为
+            document.addEventListener('submit', function(event) {
+                event.preventDefault();
+            });
+        }
+        
+        // 选择分类
+        function selectCategory(category, subtype) {
+            appState.selectedCategory = category;
+            appState.selectedSubtype = subtype;
+            
+            // 更新按钮样式
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 根据选择的分类和子类型激活对应的按钮
+            let activeClass = '';
+            if (subtype === 'up') {
+                activeClass = `${category}-up`;
+            } else if (subtype === 'down') {
+                activeClass = `${category}-down`;
+            }
+            
+            const activeBtn = document.querySelector(`.category-btn.${activeClass}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        }
+        
+        // 本地存储
+        function saveLocalData() {
+            const data = {
+                records: appState.records,
+                savedAt: new Date().toISOString(),
+                version: '16.0'
+            };
+            
+            try {
+                localStorage.setItem('finance_management_data', JSON.stringify(data));
+            } catch (error) {
+                console.error('本地存储失败:', error);
+            }
+        }
+        
+        function loadLocalData() {
+            try {
+                const saved = localStorage.getItem('finance_management_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    appState.records = data.records || [];
+                    
+                    updatePersonFilter();
+                    loadRecords();
+                    loadTodayRecords();
+                    loadMyIncomeStats();
+                }
+            } catch (error) {
+                console.error('加载本地数据失败:', error);
+            }
+        }
+        
+        // 更新人员筛选器
+        function updatePersonFilter() {
+            const filter = elements.filterPerson;
+            filter.innerHTML = '<option value="all">全部人员</option>';
+            
+            const persons = new Set();
+            appState.records.forEach(record => {
+                if (record.name && record.name.trim()) {
+                    persons.add(record.name.trim());
+                }
+            });
+            
+            persons.forEach(person => {
+                const option = document.createElement('option');
+                option.value = person;
+                option.textContent = person;
+                filter.appendChild(option);
+            });
+        }
+        
+        // 保存记录
+        function saveRecord() {
+            const name = elements.personName.value.trim();
+            const date = elements.recordDate.value;
+            const amount = parseFloat(elements.recordAmount.value);
+            const type = elements.recordType.value;
+            const note = elements.recordNote.value.trim();
+            const category = appState.selectedCategory;
+            const subtype = appState.selectedSubtype;
+            
+            if (!name) {
+                showToast('请输入姓名', true);
+                return;
+            }
+            
+            if (!date) {
+                showToast('请选择日期', true);
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                showToast('请输入有效的金额', true);
+                return;
+            }
+            
+            const record = {
+                id: 'record_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                date,
+                name,
+                category,
+                subtype: subtype || '',
+                type,
+                amount: type === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+                note
+            };
+            
+            appState.records.unshift(record);
+            
+            // 清空表单
+            elements.recordAmount.value = '';
+            elements.personName.value = ''; // 清空姓名
+            // 备注不清空，除非手动修改
+            
+            saveLocalData();
+            updatePersonFilter();
+            loadRecords();
+            loadTodayRecords();
+            loadMyIncomeStats();
+            
+            showToast('记录已保存');
+        }
+        
+        // 加载当天记录
+        function loadTodayRecords() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = appState.records.filter(record => record.date === today);
+            
+            renderTodayRecordsTable(todayRecords);
+        }
+        
+        // 渲染当天记录表格
+        function renderTodayRecordsTable(records) {
+            const tbody = elements.todayRecordsBody;
+            
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无当天记录</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            
+            records.forEach(record => {
+                const isIncome = record.amount > 0;
+                const categoryLabel = getCategoryLabel(record.category, record.subtype);
+                
+                html += `
+                    <tr data-id="${record.id}">
+                        <td><strong>${record.name}</strong></td>
+                        <td>
+                            <span class="category-badge ${record.subtype ? record.category + '-' + record.subtype : record.category}">
+                                ${categoryLabel}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="type-badge ${isIncome ? 'type-income' : 'type-expense'}">
+                                ${isIncome ? '收入' : '支出'}
+                            </span>
+                        </td>
+                        <td class="${isIncome ? 'stat-income' : 'stat-expense'}">
+                            ${isIncome ? '+' : ''}¥${Math.abs(record.amount).toFixed(2)}
+                        </td>
+                        <td>${record.note || '-'}</td>
+                        <td>
+                            <button class="action-btn action-delete" data-id="${record.id}">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // 加载我的收支统计
+        function loadMyIncomeStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = appState.records.filter(record => record.date === today);
+            
+            // 计算澳门收支
+            const macauUpRecords = todayRecords.filter(r => r.category === 'macau' && r.subtype === 'up');
+            const macauDownRecords = todayRecords.filter(r => r.category === 'macau' && r.subtype === 'down');
+            
+            const macauUpTotal = calculateStats(macauUpRecords);
+            const macauDownTotal = calculateStats(macauDownRecords);
+            
+            // 澳门我的收支 = 澳门下家总和 - 澳门上家总和
+            const macauMyIncome = macauDownTotal.profit - macauUpTotal.profit;
+            
+            // 计算粤港收支
+            const guangdongUpRecords = todayRecords.filter(r => r.category === 'guangdong' && r.subtype === 'up');
+            const guangdongDownRecords = todayRecords.filter(r => r.category === 'guangdong' && r.subtype === 'down');
+            
+            const guangdongUpTotal = calculateStats(guangdongUpRecords);
+            const guangdongDownTotal = calculateStats(guangdongDownRecords);
+            
+            // 粤港我的收支 = 粤港下家总和 - 粤港上家总和
+            const guangdongMyIncome = guangdongDownTotal.profit - guangdongUpTotal.profit;
+            
+            // 总我的收支
+            const totalMyIncome = macauMyIncome + guangdongMyIncome;
+            
+            renderMyIncomeStats({
+                macau: {
+                    up: macauUpTotal,
+                    down: macauDownTotal,
+                    my: macauMyIncome
+                },
+                guangdong: {
+                    up: guangdongUpTotal,
+                    down: guangdongDownTotal,
+                    my: guangdongMyIncome
+                },
+                total: totalMyIncome
+            }, today);
+        }
+        
+        // 渲染我的收支统计
+        function renderMyIncomeStats(stats, date) {
+            const container = elements.myIncomeStats;
+            
+            container.innerHTML = '';
+            
+            // 澳门我的收支卡片
+            const macauIsIncome = stats.macau.my >= 0;
+            const macauColorClass = macauIsIncome ? 'stat-income' : 'stat-expense';
+            const macauHintClass = macauIsIncome ? 'income-hint' : 'expense-hint';
+            const macauHintText = macauIsIncome ? `收入 ¥${Math.abs(stats.macau.my).toFixed(2)}` : `支出 ¥${Math.abs(stats.macau.my).toFixed(2)}`;
+            
+            // 澳门上家统计
+            const macauUpIsIncome = stats.macau.up.profit >= 0;
+            const macauUpColorClass = macauUpIsIncome ? 'stat-income' : 'stat-expense';
+            const macauUpHintText = macauUpIsIncome ? `收入 ¥${Math.abs(stats.macau.up.profit).toFixed(2)}` : `支出 ¥${Math.abs(stats.macau.up.profit).toFixed(2)}`;
+            
+            // 澳门下家统计
+            const macauDownIsIncome = stats.macau.down.profit >= 0;
+            const macauDownColorClass = macauDownIsIncome ? 'stat-income' : 'stat-expense';
+            const macauDownHintText = macauDownIsIncome ? `收入 ¥${Math.abs(stats.macau.down.profit).toFixed(2)}` : `支出 ¥${Math.abs(stats.macau.down.profit).toFixed(2)}`;
+            
+            container.innerHTML += `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">澳门我的收支</div>
+                        <div class="stat-amount ${macauColorClass}">
+                            ${macauIsIncome ? '+' : ''}¥${Math.abs(stats.macau.my).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="${macauHintClass}" style="margin-top: 5px;">
+                        ${macauHintText}
+                    </div>
+                    <div class="stat-details">
+                        澳门下家：<span class="${macauDownColorClass}">${macauDownHintText}</span><br>
+                        澳门上家：<span class="${macauUpColorClass}">${macauUpHintText}</span>
+                    </div>
+                </div>
+            `;
+            
+            // 粤港我的收支卡片
+            const guangdongIsIncome = stats.guangdong.my >= 0;
+            const guangdongColorClass = guangdongIsIncome ? 'stat-income' : 'stat-expense';
+            const guangdongHintClass = guangdongIsIncome ? 'income-hint' : 'expense-hint';
+            const guangdongHintText = guangdongIsIncome ? `收入 ¥${Math.abs(stats.guangdong.my).toFixed(2)}` : `支出 ¥${Math.abs(stats.guangdong.my).toFixed(2)}`;
+            
+            // 粤港上家统计
+            const guangdongUpIsIncome = stats.guangdong.up.profit >= 0;
+            const guangdongUpColorClass = guangdongUpIsIncome ? 'stat-income' : 'stat-expense';
+            const guangdongUpHintText = guangdongUpIsIncome ? `收入 ¥${Math.abs(stats.guangdong.up.profit).toFixed(2)}` : `支出 ¥${Math.abs(stats.guangdong.up.profit).toFixed(2)}`;
+            
+            // 粤港下家统计
+            const guangdongDownIsIncome = stats.guangdong.down.profit >= 0;
+            const guangdongDownColorClass = guangdongDownIsIncome ? 'stat-income' : 'stat-expense';
+            const guangdongDownHintText = guangdongDownIsIncome ? `收入 ¥${Math.abs(stats.guangdong.down.profit).toFixed(2)}` : `支出 ¥${Math.abs(stats.guangdong.down.profit).toFixed(2)}`;
+            
+            container.innerHTML += `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">粤港我的收支</div>
+                        <div class="stat-amount ${guangdongColorClass}">
+                            ${guangdongIsIncome ? '+' : ''}¥${Math.abs(stats.guangdong.my).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="${guangdongHintClass}" style="margin-top: 5px;">
+                        ${guangdongHintText}
+                    </div>
+                    <div class="stat-details">
+                        粤港下家：<span class="${guangdongDownColorClass}">${guangdongDownHintText}</span><br>
+                        粤港上家：<span class="${guangdongUpColorClass}">${guangdongUpHintText}</span>
+                    </div>
+                </div>
+            `;
+            
+            // 总计我的收支卡片
+            const totalIsIncome = stats.total >= 0;
+            const totalColorClass = totalIsIncome ? 'stat-income' : 'stat-expense';
+            const totalHintClass = totalIsIncome ? 'income-hint' : 'expense-hint';
+            const totalHintText = totalIsIncome ? `收入 ¥${Math.abs(stats.total).toFixed(2)}` : `支出 ¥${Math.abs(stats.total).toFixed(2)}`;
+            
+            container.innerHTML += `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">总计我的收支</div>
+                        <div class="stat-amount ${totalColorClass}">
+                            ${totalIsIncome ? '+' : ''}¥${Math.abs(stats.total).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="${totalHintClass}" style="margin-top: 5px;">
+                        ${totalHintText}
+                    </div>
+                    <div class="stat-details">
+                        日期：${date}<br>
+                        澳门：${macauIsIncome ? '+' : ''}¥${Math.abs(stats.macau.my).toFixed(2)}<br>
+                        粤港：${guangdongIsIncome ? '+' : ''}¥${Math.abs(stats.guangdong.my).toFixed(2)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 计算统计数据
+        function calculateStats(recordList) {
+            let income = 0;
+            let expense = 0;
+            
+            recordList.forEach(record => {
+                if (record.amount > 0) {
+                    income += record.amount;
+                } else {
+                    expense += record.amount;
+                }
+            });
+            
+            return {
+                income,
+                expense: Math.abs(expense),
+                profit: income + expense,
+                count: recordList.length
+            };
+        }
+        
+        // 获取分类标签
+        function getCategoryLabel(category, subtype) {
+            if (subtype === 'up') {
+                return category === 'macau' ? '澳门上家' : '粤港上家';
+            } else if (subtype === 'down') {
+                return category === 'macau' ? '澳门下家' : '粤港下家';
+            } else {
+                return category === 'macau' ? '澳门' : '粤港';
+            }
+        }
+        
+        // 加载记录
+        function loadRecords() {
+            const viewMode = elements.viewMode.value;
+            const filterCategory = elements.filterCategory.value;
+            const filterPerson = elements.filterPerson.value;
+            
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            const today = new Date().toISOString().split('T')[0];
+            
+            let filteredRecords = appState.records;
+            
+            // 按时间筛选
+            if (viewMode !== 'all') {
+                filteredRecords = filteredRecords.filter(record => {
+                    if (viewMode === 'today') {
+                        return record.date === today;
+                    } else if (viewMode === 'month') {
+                        const recordDate = new Date(record.date);
+                        const recordYear = recordDate.getFullYear();
+                        const recordMonth = recordDate.getMonth() + 1;
+                        return recordYear === currentYear && recordMonth === currentMonth;
+                    } else if (viewMode === 'year') {
+                        const recordDate = new Date(record.date);
+                        const recordYear = recordDate.getFullYear();
+                        return recordYear === currentYear;
+                    }
+                    return true;
+                });
+            }
+            
+            // 按分类筛选
+            if (filterCategory !== 'all') {
+                if (filterCategory === 'my-income') {
+                    // 计算我的收支记录
+                    renderMyIncomeRecords(filteredRecords, viewMode);
+                    return;
+                } else if (filterCategory.includes('-')) {
+                    // 处理上下家筛选
+                    const [category, subtype] = filterCategory.split('-');
+                    filteredRecords = filteredRecords.filter(record => 
+                        record.category === category && record.subtype === subtype
+                    );
+                } else {
+                    filteredRecords = filteredRecords.filter(record => record.category === filterCategory);
+                }
+            }
+            
+            // 按人员筛选
+            if (filterPerson !== 'all') {
+                filteredRecords = filteredRecords.filter(record => record.name === filterPerson);
+            }
+            
+            renderRecordsTable(filteredRecords);
+            renderSummaryStats(filteredRecords, viewMode, filterCategory);
+        }
+        
+        // 渲染我的收支记录
+        function renderMyIncomeRecords(records, viewMode) {
+            const tbody = elements.recordsBody;
+            const container = elements.summaryStats;
+            
+            // 按日期分组
+            const recordsByDate = {};
+            records.forEach(record => {
+                if (!recordsByDate[record.date]) {
+                    recordsByDate[record.date] = [];
+                }
+                recordsByDate[record.date].push(record);
+            });
+            
+            // 计算每天的我的收支
+            const myIncomeRecords = [];
+            
+            Object.keys(recordsByDate).forEach(date => {
+                const dateRecords = recordsByDate[date];
+                
+                // 计算澳门收支
+                const macauUpRecords = dateRecords.filter(r => r.category === 'macau' && r.subtype === 'up');
+                const macauDownRecords = dateRecords.filter(r => r.category === 'macau' && r.subtype === 'down');
+                
+                const macauUpTotal = calculateStats(macauUpRecords);
+                const macauDownTotal = calculateStats(macauDownRecords);
+                
+                // 澳门我的收支 = 澳门下家总和 - 澳门上家总和
+                const macauMyIncome = macauDownTotal.profit - macauUpTotal.profit;
+                
+                // 计算粤港收支
+                const guangdongUpRecords = dateRecords.filter(r => r.category === 'guangdong' && r.subtype === 'up');
+                const guangdongDownRecords = dateRecords.filter(r => r.category === 'guangdong' && r.subtype === 'down');
+                
+                const guangdongUpTotal = calculateStats(guangdongUpRecords);
+                const guangdongDownTotal = calculateStats(guangdongDownRecords);
+                
+                // 粤港我的收支 = 粤港下家总和 - 粤港上家总和
+                const guangdongMyIncome = guangdongDownTotal.profit - guangdongUpTotal.profit;
+                
+                // 总我的收支
+                const totalMyIncome = macauMyIncome + guangdongMyIncome;
+                
+                if (totalMyIncome !== 0) {
+                    myIncomeRecords.push({
+                        date,
+                        name: '我的收支',
+                        category: 'my-income',
+                        type: totalMyIncome >= 0 ? 'income' : 'expense',
+                        amount: totalMyIncome,
+                        note: `澳门:${macauMyIncome >= 0 ? '+' : ''}${macauMyIncome.toFixed(2)} 粤港:${guangdongMyIncome >= 0 ? '+' : ''}${guangdongMyIncome.toFixed(2)}`,
+                        isVirtual: true
+                    });
+                }
+            });
+            
+            // 按日期排序
+            myIncomeRecords.sort((a, b) => b.date.localeCompare(a.date));
+            
+            if (myIncomeRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无我的收支记录</td></tr>';
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            myIncomeRecords.forEach(record => {
+                const isIncome = record.amount > 0;
+                const rowClass = isIncome ? 'my-income-row' : 'my-expense-row';
+                const badgeClass = isIncome ? 'my-income' : 'my-expense';
+                const badgeText = isIncome ? '我的收入' : '我的支出';
+                const hintClass = isIncome ? 'income-hint' : 'expense-hint';
+                const hintText = isIncome ? `收入 ¥${Math.abs(record.amount).toFixed(2)}` : `支出 ¥${Math.abs(record.amount).toFixed(2)}`;
+                
+                html += `
+                    <tr class="${rowClass}">
+                        <td>${record.date}</td>
+                        <td><strong>${record.name}</strong></td>
+                        <td>
+                            <span class="category-badge ${badgeClass}">
+                                ${badgeText}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="type-badge ${isIncome ? 'type-income' : 'type-expense'}">
+                                ${isIncome ? '收入' : '支出'}
+                            </span>
+                        </td>
+                        <td class="${isIncome ? 'stat-income' : 'stat-expense'}">
+                            ${isIncome ? '+' : ''}¥${Math.abs(record.amount).toFixed(2)}
+                        </td>
+                        <td>${record.note || '-'}</td>
+                        <td>
+                            <span style="color: #7f8c8d; font-size: 9px;">计算得出</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // 计算统计
+            const myIncomeStats = calculateStats(myIncomeRecords);
+            const timeLabel = viewMode === 'today' ? '当天' : viewMode === 'month' ? '本月' : viewMode === 'year' ? '本年' : '累计';
+            const isIncome = myIncomeStats.profit >= 0;
+            const hintClass = isIncome ? 'income-hint' : 'expense-hint';
+            
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">我的收支 ${timeLabel}统计</div>
+                        <div class="stat-amount ${isIncome ? 'stat-income' : 'stat-expense'}">
+                            ${isIncome ? '+' : ''}¥${Math.abs(myIncomeStats.profit).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="${hintClass}" style="margin-top: 5px;">
+                        ${isIncome ? '收入' : '支出'} ¥${Math.abs(myIncomeStats.profit).toFixed(2)}
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+                        <div>
+                            <div class="stat-label">总收入</div>
+                            <div class="stat-amount stat-income">+¥${myIncomeStats.income.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">总支出</div>
+                            <div class="stat-amount stat-expense">-¥${myIncomeStats.expense.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="stat-details">记录数：${myIncomeStats.count}天</div>
+                </div>
+            `;
+        }
+        
+        // 渲染记录表格
+        function renderRecordsTable(records) {
+            const tbody = elements.recordsBody;
+            
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无记录</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            
+            records.forEach(record => {
+                const isIncome = record.amount > 0;
+                const categoryLabel = getCategoryLabel(record.category, record.subtype);
+                
+                html += `
+                    <tr data-id="${record.id}">
+                        <td>${record.date}</td>
+                        <td><strong>${record.name}</strong></td>
+                        <td>
+                            <span class="category-badge ${record.subtype ? record.category + '-' + record.subtype : record.category}">
+                                ${categoryLabel}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="type-badge ${isIncome ? 'type-income' : 'type-expense'}">
+                                ${isIncome ? '收入' : '支出'}
+                            </span>
+                        </td>
+                        <td class="${isIncome ? 'stat-income' : 'stat-expense'}">
+                            ${isIncome ? '+' : ''}¥${Math.abs(record.amount).toFixed(2)}
+                        </td>
+                        <td>${record.note || '-'}</td>
+                        <td>
+                            <button class="action-btn action-delete" data-id="${record.id}">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // 渲染统计卡片
+        function renderSummaryStats(records, viewMode, filterCategory) {
+            const container = elements.summaryStats;
+            
+            // 按分类分开统计
+            const macauUpRecords = records.filter(r => r.category === 'macau' && r.subtype === 'up');
+            const macauDownRecords = records.filter(r => r.category === 'macau' && r.subtype === 'down');
+            
+            const guangdongUpRecords = records.filter(r => r.category === 'guangdong' && r.subtype === 'up');
+            const guangdongDownRecords = records.filter(r => r.category === 'guangdong' && r.subtype === 'down');
+            
+            const allRecords = records;
+            
+            const timeLabel = viewMode === 'today' ? '当天' : viewMode === 'month' ? '本月' : viewMode === 'year' ? '本年' : '累计';
+            
+            const macauUpTotal = calculateStats(macauUpRecords);
+            const macauDownTotal = calculateStats(macauDownRecords);
+            
+            const guangdongUpTotal = calculateStats(guangdongUpRecords);
+            const guangdongDownTotal = calculateStats(guangdongDownRecords);
+            
+            const allStats = calculateStats(allRecords);
+            
+            // 计算我的收支
+            const macauMyIncome = macauDownTotal.profit - macauUpTotal.profit;
+            const guangdongMyIncome = guangdongDownTotal.profit - guangdongUpTotal.profit;
+            
+            container.innerHTML = '';
+            
+            // 澳门统计卡片
+            if (filterCategory === 'all' || filterCategory.includes('macau')) {
+                const macauIsIncome = macauMyIncome >= 0;
+                const macauHintClass = macauIsIncome ? 'income-hint' : 'expense-hint';
+                
+                container.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">澳门 ${timeLabel}统计</div>
+                            <div class="stat-amount ${macauIsIncome ? 'stat-income' : 'stat-expense'}">
+                                ${macauIsIncome ? '+' : ''}¥${Math.abs(macauMyIncome).toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="${macauHintClass}" style="margin-bottom: 6px;">
+                            ${macauIsIncome ? '收入' : '支出'} ¥${Math.abs(macauMyIncome).toFixed(2)}
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+                            <div>
+                                <div class="stat-label">上家</div>
+                                <div class="stat-amount ${macauUpTotal.profit >= 0 ? 'stat-income' : 'stat-expense'}">
+                                    ${macauUpTotal.profit >= 0 ? '+' : ''}¥${Math.abs(macauUpTotal.profit).toFixed(2)}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="stat-label">下家</div>
+                                <div class="stat-amount ${macauDownTotal.profit >= 0 ? 'stat-income' : 'stat-expense'}">
+                                    ${macauDownTotal.profit >= 0 ? '+' : ''}¥${Math.abs(macauDownTotal.profit).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-details">记录数：${macauUpTotal.count + macauDownTotal.count}条</div>
+                    </div>
+                `;
+            }
+            
+            // 粤港统计卡片
+            if (filterCategory === 'all' || filterCategory.includes('guangdong')) {
+                const guangdongIsIncome = guangdongMyIncome >= 0;
+                const guangdongHintClass = guangdongIsIncome ? 'income-hint' : 'expense-hint';
+                
+                container.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">粤港 ${timeLabel}统计</div>
+                            <div class="stat-amount ${guangdongIsIncome ? 'stat-income' : 'stat-expense'}">
+                                ${guangdongIsIncome ? '+' : ''}¥${Math.abs(guangdongMyIncome).toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="${guangdongHintClass}" style="margin-bottom: 6px;">
+                            ${guangdongIsIncome ? '收入' : '支出'} ¥${Math.abs(guangdongMyIncome).toFixed(2)}
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+                            <div>
+                                <div class="stat-label">上家</div>
+                                <div class="stat-amount ${guangdongUpTotal.profit >= 0 ? 'stat-income' : 'stat-expense'}">
+                                    ${guangdongUpTotal.profit >= 0 ? '+' : ''}¥${Math.abs(guangdongUpTotal.profit).toFixed(2)}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="stat-label">下家</div>
+                                <div class="stat-amount ${guangdongDownTotal.profit >= 0 ? 'stat-income' : 'stat-expense'}">
+                                    ${guangdongDownTotal.profit >= 0 ? '+' : ''}¥${Math.abs(guangdongDownTotal.profit).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-details">记录数：${guangdongUpTotal.count + guangdongDownTotal.count}条</div>
+                    </div>
+                `;
+            }
+            
+            // 总统计卡片
+            const allIsIncome = allStats.profit >= 0;
+            const allHintClass = allIsIncome ? 'income-hint' : 'expense-hint';
+            
+            container.innerHTML += `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">总计 ${timeLabel}统计</div>
+                        <div class="stat-amount ${allIsIncome ? 'stat-income' : 'stat-expense'}">
+                            ${allIsIncome ? '+' : ''}¥${Math.abs(allStats.profit).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="${allHintClass}" style="margin-bottom: 6px;">
+                        ${allIsIncome ? '收入' : '支出'} ¥${Math.abs(allStats.profit).toFixed(2)}
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+                        <div>
+                            <div class="stat-label">总收入</div>
+                            <div class="stat-amount stat-income">+¥${allStats.income.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">总支出</div>
+                            <div class="stat-amount stat-expense">-¥${allStats.expense.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="stat-details">记录总数：${allStats.count}条</div>
+                </div>
+            `;
+        }
+        
+        // 删除记录 - 改进版
+        function deleteRecord(recordId) {
+            if (!recordId) {
+                showToast('删除失败：无效的记录ID', true);
+                return;
+            }
+            
+            // 显示确认对话框
+            if (!confirm('确定要删除这条记录吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            // 查找记录索引
+            const index = appState.records.findIndex(record => record.id === recordId);
+            
+            if (index === -1) {
+                showToast('删除失败：记录不存在', true);
+                return;
+            }
+            
+            // 删除记录
+            appState.records.splice(index, 1);
+            
+            // 保存到本地存储
+            saveLocalData();
+            
+            // 更新界面
+            updatePersonFilter();
+            loadRecords();
+            loadTodayRecords();
+            loadMyIncomeStats();
+            
+            // 显示成功消息
+            showToast('✅ 记录已删除');
+            
+            // 添加一些调试信息到控制台
+            console.log(`已删除记录，ID: ${recordId}，剩余记录数: ${appState.records.length}`);
+        }
+        
+        // 清除当月记录
+        function clearCurrentMonth() {
+            if (appState.records.length === 0) {
+                showToast('没有数据可清除', true);
+                return;
+            }
+            
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            
+            const monthRecords = appState.records.filter(record => {
+                const recordDate = new Date(record.date);
+                const recordYear = recordDate.getFullYear();
+                const recordMonth = recordDate.getMonth() + 1;
+                return recordYear === currentYear && recordMonth === currentMonth;
+            });
+            
+            if (monthRecords.length === 0) {
+                showToast('本月没有记录可清除', true);
+                return;
+            }
+            
+            if (confirm(`确定要清除本月的所有记录吗？\n将删除 ${monthRecords.length} 条记录\n此操作不可恢复！`)) {
+                appState.records = appState.records.filter(record => {
+                    const recordDate = new Date(record.date);
+                    const recordYear = recordDate.getFullYear();
+                    const recordMonth = recordDate.getMonth() + 1;
+                    return !(recordYear === currentYear && recordMonth === currentMonth);
+                });
+                
+                saveLocalData();
+                updatePersonFilter();
+                loadRecords();
+                loadTodayRecords();
+                loadMyIncomeStats();
+                
+                showToast(`✅ 已清除本月 ${monthRecords.length} 条记录`);
+            }
+        }
+        
+        // 清空数据
+        function clearAllData() {
+            if (appState.records.length === 0) {
+                showToast('没有数据可清空', true);
+                return;
+            }
+            
+            if (confirm(`确定要清空所有数据吗？\n将删除 ${appState.records.length} 条记录\n此操作不可恢复！`)) {
+                appState.records = [];
+                saveLocalData();
+                updatePersonFilter();
+                loadRecords();
+                loadTodayRecords();
+                loadMyIncomeStats();
+                
+                showToast('✅ 数据已清空');
+            }
+        }
+        
+        // 导出数据
+        function exportData() {
+            if (appState.records.length === 0) {
+                showToast('没有数据可导出', true);
+                return;
+            }
+            
+            const data = {
+                records: appState.records,
+                exportedAt: new Date().toISOString(),
+                version: '16.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = `收支数据_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('✅ 数据已导出');
+        }
+        
+        // 导入数据
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        
+                        if (confirm(`确定要导入数据吗？\n这将覆盖当前所有数据。\n包含：${data.records?.
